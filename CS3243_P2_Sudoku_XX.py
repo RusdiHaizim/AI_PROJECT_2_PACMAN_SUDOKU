@@ -57,10 +57,26 @@ class Csp(object):
                 return False
         return True
 
+    def isConsistent(self, assignment, var, value):
+        for xI, x in assignment.iteritems():
+            if x == value and xI in self.neighbours[var]:
+                return False
+        return True
+
+    def assign(self, var, value, assignment):
+        assignment[var] = value
+
+        #do forward checking
+        for nCell in self.neighbours[var]:
+            if nCell not in assignment and value in self.domain[nCell]:
+                self.domain[nCell].remove(value)
+                self.restore[var].append( (nCell, value) )
+                
+        
     def unassign(self, var, assignment):
         if var in assignment:
-            for (k, value) in self.restore(var):
-                self.domain[k].append(value)
+            for (cell, value) in self.restore[var]:
+                self.domain[cell].append(value)
             self.restore[var] = []
             del assignment[var]
 
@@ -70,30 +86,34 @@ class Sudoku(object):
         # you may add more attributes if you need
         self.puzzle = puzzle # self.puzzle is a list of lists
         self.ans = copy.deepcopy(puzzle) # self.ans is a list of lists
+        self.csp = Csp(puzzle)
+        self.constraints = self.getConstraints(self.csp)
+        self.steps = 0
 
     def runAC3(self, csp):
-        qu = self.getConstraints(csp)
-        print 'len', qu.qsize()
-        count = 0
-        while True:
-            if qu.empty():
-                #print 'lenQ', qu.qsize(), 'count', count
-                print 'counter', count
-                break
-            count += 1
-            xI, xJ = qu.get()
-            if self.revise(csp, xI, xJ):
-                #print 'lenQ', qu.qsize(), 'count', count
-                if len(csp.domain[xI]) == 0:
-                    print 'xI is ZERO', xI
-                    return False
-                for xK in csp.neighbours[xI]:
-                    #print 'xI', xI
-                    #print 'xK', xK
-                    if xK != xI:
-                        #print 'putting', xK, xI
-                        qu.put( (xK, xI) )
         return True
+##        qu = self.constraints
+##        print 'len', qu.qsize()
+##        count = 0
+##        while True:
+##            if qu.empty():
+##                #print 'lenQ', qu.qsize(), 'count', count
+##                print 'counter', count
+##                break
+##            count += 1
+##            xI, xJ = qu.get()
+##            if self.revise(csp, xI, xJ):
+##                #print 'lenQ', qu.qsize(), 'count', count
+##                if len(csp.domain[xI]) == 0:
+##                    print 'xI is ZERO', xI
+##                    return False
+##                for xK in csp.neighbours[xI]:
+##                    #print 'xI', xI
+##                    #print 'xK', xK
+##                    if xK != xI:
+##                        #print 'putting', xK, xI
+##                        qu.put( (xK, xI) )
+##        return True
 
     def revise(self, csp, xI, xJ):
         revised = False
@@ -104,8 +124,8 @@ class Sudoku(object):
                     removeFlag = False
             if removeFlag:
                 csp.domain[xI].remove(i)
-                print 'd removed', i
-                print xI, 'left with', csp.domain[xI]
+                #print 'd removed', i
+                #print xI, 'left with', csp.domain[xI]
                 revised = True
         return revised
 
@@ -119,8 +139,33 @@ class Sudoku(object):
                 #print cell, nCell
         return qu
 
-    def backtrackSearch(self):
-        pass
+    #Bulk of solve is here
+    def backtrackSearch(self, assignment):
+        self.steps += 1
+        if len(assignment) == len(self.csp.varList):
+            print 'ASSIGNED ALL'
+            print 'STEPS:', self.steps
+            return assignment
+        #Most constrained variable heuristic
+        var = self.selectUnassignedVariable(assignment)
+        for value in self.orderDomainValues(var):
+            if self.csp.isConsistent(assignment, var, value):
+                self.csp.assign(var, value, assignment)
+                #Do inference i.e. forward checking or ac-3 here
+                result = self.backtrackSearch(assignment)
+                if result:
+                    return result
+                self.csp.unassign(var, assignment)
+        return False
+
+    #Function to return var with min number of domain values
+    def selectUnassignedVariable(self, assignment):
+        unassigned = [v for v in self.csp.varList if v not in assignment]
+        return min(unassigned, key=lambda var: len(self.csp.domain[var]))
+
+    #For now, return domain list of a variable
+    def orderDomainValues(self, var):
+        return self.csp.domain[var]
 
     def getOutput(self, csp):
         for var in csp.domain:
@@ -128,8 +173,7 @@ class Sudoku(object):
     
     def solve(self):
         # TODO: Write your code here
-
-        newPuzzle = Csp(self.puzzle)
+        newPuzzle = self.csp
         pP(self.puzzle)
         print 'Trying AC3'
         if self.runAC3(newPuzzle):
@@ -142,15 +186,50 @@ class Sudoku(object):
                 print 'Starting backtrack'
                 #RUN BACKTRACKING
                 assignment = {}
-                isAssigned = self.backtrackSearch()
+                isAssigned = self.backtrackSearch(assignment)
+                
+                for var in newPuzzle.domain:
+                    newPuzzle.domain[var] = [assignment[var]] if len(var) > 1 else newPuzzle.domain[var]
+                for k in newPuzzle.domain:
+                    pass
+                    #print k, newPuzzle.domain[k]
                 if isAssigned:
                     #TODO ASSIGN
-                    pass
+                    self.getOutput(newPuzzle)
+                    print 'Backtrack SUCCESS'
+                    pP(self.ans)
+                    print 'Result is', self.checkResult()
                 else:
                     #NO solution, returning original sudoku
-                    pass
+                    print 'Backtrack FAILED'
+                    
+                
         # self.ans is a list of lists
         return self.ans
+
+    def checkResult(self):
+        try:
+            f = open('sudoku/output4.txt', 'r')
+        except IOError:
+            print ("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
+            raise IOError("Result file not found!")
+
+        puzzle = [[0 for i in range(9)] for j in range(9)]
+        lines = f.readlines()
+
+        i, j = 0, 0
+        for line in lines:
+            for number in line:
+                if '0' <= number <= '9':
+                    puzzle[i][j] = int(number)
+                    j += 1
+                    if j == 9:
+                        i += 1
+                        j = 0
+
+        if puzzle == self.ans:
+            return 'PASS'
+        return 'FAIL'
 
 def pP(puzzle):
     for i in range(len(puzzle)):
