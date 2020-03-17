@@ -85,10 +85,14 @@ class Sudoku(object):
     def __init__(self, puzzle):
         # you may add more attributes if you need
         self.puzzle = puzzle # self.puzzle is a list of lists
-        self.ans = copy.deepcopy(puzzle) # self.ans is a list of lists
+        self.ans = self.copy(puzzle) # self.ans is a list of lists
         self.csp = Csp(puzzle)
         self.constraints = self.getConstraints(self.csp)
         self.steps = 0
+
+    def copy(self, puzzle):
+        new_puzzle = [[x for x in row] for row in puzzle]
+        return new_puzzle
 
     def runAC3(self, csp):
         return True
