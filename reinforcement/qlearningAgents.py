@@ -76,14 +76,17 @@ class QLearningAgent(ReinforcementAgent):
           you should return None.
         """
         "*** YOUR CODE HERE ***"
-        maxActionValue = self.computeValueFromQValues(state)
         legalActions = self.getLegalActions(state)
         if not legalActions:
             return None
+        maxAction = legalActions[0]
+        maxActionValue = -1000000
         for action in legalActions:
-            if self.getQValue(state, action) == maxActionValue:
-                return action
-        return None
+            currentQValue = self.getQValue(state, action)
+            if currentQValue > maxActionValue:
+                maxActionValue = currentQValue
+                maxAction = action
+        return maxAction
 
     def getAction(self, state):
         """
@@ -101,6 +104,7 @@ class QLearningAgent(ReinforcementAgent):
         action = None
         "*** YOUR CODE HERE ***"
         if not legalActions:
+            print("returning none get action")
             return None
 
         isHeads = util.flipCoin(self.epsilon)
@@ -187,6 +191,8 @@ class ApproximateQAgent(PacmanQAgent):
           Should return Q(state,action) = w * featureVector
           where * is the dotProduct operator
         """
+        #Just return this for now
+        return PacmanQAgent.getQValue(self, state, action)
         "*** YOUR CODE HERE ***"
 
     def update(self, state, action, nextState, reward):
@@ -194,6 +200,8 @@ class ApproximateQAgent(PacmanQAgent):
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
+        #Just return this for now
+        PacmanQAgent.update(self, state, action, nextState, reward)
 
     def final(self, state):
         "Called at the end of each game."
