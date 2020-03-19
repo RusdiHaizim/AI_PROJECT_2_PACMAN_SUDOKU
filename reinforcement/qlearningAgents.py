@@ -41,7 +41,7 @@ class QLearningAgent(ReinforcementAgent):
     def __init__(self, **args):
         "You can initialize Q-values here..."
         ReinforcementAgent.__init__(self, **args)
-        self.Q_table = {}
+        self.Q_table = util.Counter()
 
 
     def getQValue(self, state, action):
@@ -51,8 +51,6 @@ class QLearningAgent(ReinforcementAgent):
           or the Q node value otherwise
         """
         "*** YOUR CODE HERE ***"
-        if (state, action) not in self.Q_table:
-            return 0.0
         return self.Q_table[(state, action)]
 
     def computeValueFromQValues(self, state):
@@ -63,11 +61,20 @@ class QLearningAgent(ReinforcementAgent):
           terminal state, you should return a value of 0.0.
         """
         "*** YOUR CODE HERE ***"
+        ### This one gives 75%
+##        legalActions = self.getLegalActions(state)
+##        maxActionValue = 0.0
+##        for action in legalActions:
+##            maxActionValue = max(maxActionValue, self.getQValue(state, action))
+##        return maxActionValue
+        ### This one gives 100%
         legalActions = self.getLegalActions(state)
-        maxActionValue = 0.0
+        maxActionValue = -float('inf')
         for action in legalActions:
-            maxActionValue = max(maxActionValue, self.getQValue(state, action))
-        return maxActionValue
+            currQ = self.getQValue(state, action)
+            if currQ > maxActionValue:
+                maxActionValue = currQ
+        return maxActionValue if maxActionValue != (-float('inf')) else 0.0
 
     def computeActionFromQValues(self, state):
         """
@@ -77,15 +84,14 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         legalActions = self.getLegalActions(state)
-        if not legalActions:
-            return None
-        maxAction = legalActions[0]
-        maxActionValue = -1000000
-        for action in legalActions:
-            currentQValue = self.getQValue(state, action)
-            if currentQValue > maxActionValue:
-                maxActionValue = currentQValue
-                maxAction = action
+        maxAction = None
+        maxActionValue = -float('inf')
+        if legalActions:
+            for action in legalActions:
+                currentQValue = self.getQValue(state, action)
+                if currentQValue > maxActionValue:
+                    maxActionValue = currentQValue
+                    maxAction = action
         return maxAction
 
     def getAction(self, state):
@@ -111,6 +117,7 @@ class QLearningAgent(ReinforcementAgent):
         if isHeads:
             return random.choice(legalActions)
         return self.computeActionFromQValues(state)
+    
 
     def update(self, state, action, nextState, reward):
         """
@@ -192,16 +199,25 @@ class ApproximateQAgent(PacmanQAgent):
           where * is the dotProduct operator
         """
         #Just return this for now
-        return PacmanQAgent.getQValue(self, state, action)
+        #return PacmanQAgent.getQValue(self, state, action)
         "*** YOUR CODE HERE ***"
+        return self.getWeights() * self.featExtractor.getFeatures(state, action)
+        
 
     def update(self, state, action, nextState, reward):
         """
            Should update your weights based on transition
         """
         "*** YOUR CODE HERE ***"
-        #Just return this for now
-        PacmanQAgent.update(self, state, action, nextState, reward)
+        #Just return this gfor now
+        #PacmanQAgent.update(self, state, action, nextState, reward)
+        features = self.featExtractor.getFeatures(state, action)
+        nextStateMaxQ = self.computeValueFromQValues(nextState)
+        actionQValue = self.getQValue(state, action)
+        for feat in features:
+            #print 'key', feat, 'feature', features[feat]
+            difference = reward + self.discount * nextStateMaxQ - actionQValue
+            self.weights[feat] += self.alpha * difference * features[feat]
 
     def final(self, state):
         "Called at the end of each game."
