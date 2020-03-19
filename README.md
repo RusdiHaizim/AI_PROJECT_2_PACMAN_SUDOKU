@@ -29,7 +29,16 @@ Firstly, go to the pacman directory via `cd reinforcement`.
 * For testing Q1: `python autograder.py -q q1`
 * For testing Q2: `python autograder.py -q q2`
 * For full tests (Q1 and Q2): `python autograder.py`
-* For manual maze selection: `python pacman.py -p ApproximateQAgent -a extractor=$CHOSEN_EXTRACTOR_HERE$ -x $NUM_TRAINING$ -n $NUM_TRAINING_PLUS_SHOW_ON_GUI$ -l $MAZE_LAYOUT(SEE MORE BELOW)$`
+* For manual maze selection: 
+```
+python pacman.py 
+-p ApproximateQAgent 
+-a extractor=$CHOSEN_EXTRACTOR_HERE$ 
+-x $NUM_TRAINING$ 
+-n $NUM_TRAINING_PLUS_SHOW_ON_GUI$ 
+-l $MAZE_LAYOUT(SEE MORE BELOW)$
+```
+
 E.g. `python pacman.py -p ApproximateQAgent -a extractor=SimpleExtractor -x 50 -n 60 -l mediumGrid`
 
 #### Maze Layouts:
