@@ -38,8 +38,11 @@ python pacman.py
 -n $NUM_TRAINING_PLUS_SHOW_ON_GUI$ 
 -l $MAZE_LAYOUT(SEE MORE BELOW)$
 ```
-
-E.g. `python pacman.py -p ApproximateQAgent -a extractor=SimpleExtractor -x 50 -n 60 -l mediumGrid`
+E.g.
+**Without ApproximateQAgent** [Q1]
+`python pacman.py -p PacmanQAgent -x 50 -n 60 -l mediumGrid`
+**With ApproximateQAgent and Features** [Q2 & Q3]
+`python pacman.py -p ApproximateQAgent -a extractor=SimpleExtractor -x 50 -n 60 -l mediumGrid`
 
 #### Maze Layouts:
 * capsuleClassic
