@@ -84,15 +84,19 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         legalActions = self.getLegalActions(state)
-        maxAction = None
+        #maxAction = None
+        maxActionQueue = list()
         maxActionValue = -float('inf')
         if legalActions:
             for action in legalActions:
                 currentQValue = self.getQValue(state, action)
-                if currentQValue > maxActionValue:
+                if currentQValue == maxActionValue:
+                    maxActionQueue.append(action)
+                elif currentQValue > maxActionValue:
                     maxActionValue = currentQValue
-                    maxAction = action
-        return maxAction
+                    del maxActionQueue[:]
+                    maxActionQueue.append(action)
+        return random.choice(maxActionQueue)
 
     def getAction(self, state):
         """
