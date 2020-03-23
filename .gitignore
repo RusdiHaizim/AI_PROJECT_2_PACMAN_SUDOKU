@@ -16,12 +16,5 @@ reinforcement/pacmanAgents.pyc
 reinforcement/projectParams.pyc
 reinforcement/qlearningAgents.pyc
 reinforcement/reinforcementTestClasses.pyc
-reinforcement/testClasses.pyc
-reinforcement/testParser.pyc
-reinforcement/test_cases/q2/1-tinygrid.test_output
-reinforcement/test_cases/q2/2-tinygrid-noisy.test_output
-reinforcement/test_cases/q2/3-bridge.test_output
-reinforcement/test_cases/q2/4-discountgrid.test_output
-reinforcement/test_cases/q2/5-coord-extractor.test_output
 reinforcement/textDisplay.pyc
 reinforcement/util.pyc
