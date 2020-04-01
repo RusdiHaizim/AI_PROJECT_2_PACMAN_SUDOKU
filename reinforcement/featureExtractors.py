@@ -115,16 +115,21 @@ class NewExtractor(FeatureExtractor):
         food = state.getFood()
         walls = state.getWalls()
         ghosts = state.getGhostPositions()
-        capsulesLeft = len(state.getCapsules())
         scaredGhost = []
         activeGhost = []
         features = util.Counter()
+        features["capsules"] = len(state.getCapsules())
+        minMovesGhost = 40 # This is the SCARED_TIMER of ghosts (40 moves before runs out)
+        
         for ghost in state.getGhostStates():
             if not ghost.scaredTimer:
                 activeGhost.append(ghost)
             else:
                 scaredGhost.append(ghost)
-        
+                if ghost.scaredTimer < minMovesGhost:
+                    minMovesGhost = ghost.scaredTimer
+
+        # Return remapped list containing manhattan distances btw ghost and pacman
         pos = state.getPacmanPosition()
         def getManhattanDistances(ghosts): 
             return map(lambda g: util.manhattanDistance(pos, g.getPosition()), ghosts) 
@@ -150,15 +155,18 @@ class NewExtractor(FeatureExtractor):
           # make the distance a number less than one otherwise the update
           # will diverge wildly
           features["closest-food"] = float(dist) / (walls.width * walls.height)
-          
-        if scaredGhost: # and not activeGhost:
+
+        # Pursue ghosts in self-defence (omnivore pacman, vegans pls don't flame pl0x)
+        if scaredGhost:
             distanceToClosestScaredGhost = min(getManhattanDistances(scaredGhost))
             if activeGhost:
                 distanceToClosestActiveGhost = min(getManhattanDistances(activeGhost))
             else:
-                distanceToClosestActiveGhost = 10	
-            features["capsules"] = capsulesLeft
-            if distanceToClosestScaredGhost <=6 and distanceToClosestActiveGhost >=2:
+                distanceToClosestActiveGhost = 10
+            # Only eat ghost if pacman can catch up toe scaredGhost in time, and there's
+            # no incoming activeGhosts
+            if distanceToClosestScaredGhost < minMovesGhost/2 and distanceToClosestActiveGhost > 2:
+                #print distanceToClosestScaredGhost, distanceToClosestActiveGhost, minMovesGhost
                 features["#-of-ghosts-1-step-away"] = 0.0
                 features["eats-food"] = 0.0
         

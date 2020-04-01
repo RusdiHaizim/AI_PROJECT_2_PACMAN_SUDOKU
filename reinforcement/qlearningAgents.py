@@ -218,9 +218,9 @@ class ApproximateQAgent(PacmanQAgent):
         features = self.featExtractor.getFeatures(state, action)
         nextStateMaxQ = self.computeValueFromQValues(nextState)
         actionQValue = self.getQValue(state, action)
+        difference = reward + self.discount * nextStateMaxQ - actionQValue
         for feat in features:
             #print 'key', feat, 'feature', features[feat]
-            difference = reward + self.discount * nextStateMaxQ - actionQValue
             self.weights[feat] += self.alpha * difference * features[feat]
 
     def final(self, state):
