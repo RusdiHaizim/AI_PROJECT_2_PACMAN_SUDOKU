@@ -49,6 +49,7 @@ class Csp(object):
                 for j in range(boxCol, boxCol+3):
                     if (i, j) != var and (i, j) not in self.neighbours[var]:
                         self.neighbours[var].append( (i, j) )
+        
         #Init restore for each var, var:list()
         self.restore = {v: list() if puzzle1[i] == 0 else [puzzle1[i]] for \
                        i, v in enumerate(self.varList)}
@@ -96,31 +97,29 @@ class Sudoku(object):
         new_puzzle = [[x for x in row] for row in puzzle]
         return new_puzzle
 
-    def runAC3(self, csp):
-        qu = self.getConstraints(self.csp)
+    def runAC3(self, csp, var=None):
+        qu = self.getConstraints(csp)
         #print 'len', qu.qsize()
         count = 0
         while True:
             if qu.empty():
-                #print 'lenQ', qu.qsize(), 'count', count
-                #print 'counter', count
                 break
             count += 1
             xI, xJ = qu.get()
-            if self.revise(csp, xI, xJ):
+            if self.revise(csp, xI, xJ, var):
                 #print 'lenQ', qu.qsize(), 'count', count
                 if len(csp.domain[xI]) == 0:
-                    print 'xI is ZERO', xI
+                    #print 'xI is ZERO', xI
                     return False
                 for xK in csp.neighbours[xI]:
                     #print 'xI', xI
                     #print 'xK', xK
-                    if xK != xI:
+                    if xK != xJ:
                         #print 'putting', xK, xI
                         qu.put( (xK, xI) )
         return True
 
-    def revise(self, csp, xI, xJ):
+    def revise(self, csp, xI, xJ, var=None):
         revised = False
         for i in csp.domain[xI]:
             removeFlag = True
@@ -129,7 +128,8 @@ class Sudoku(object):
                     removeFlag = False
             if removeFlag:
                 csp.domain[xI].remove(i)
-                
+                if var is not None:
+                    csp.restore[var].append( (xI, i) )
                 #print xI
                 #print 'd removed', i
                 #print xI, 'left with', csp.domain[xI]
@@ -138,7 +138,7 @@ class Sudoku(object):
 
     def getConstraints(self, csp):
         qu = Queue() #Contains a pair of pairs xD
-        for cell in csp.neighbours:
+        for cell in csp.neighbours:#sorted(csp.neighbours, key=csp.neighbours.get):
             #print 'cell', cell
             #print 'nCell', csp.neighbours[cell], '\nlen', len(csp.neighbours[cell])
             for nCell in csp.neighbours[cell]:
@@ -168,13 +168,15 @@ class Sudoku(object):
                     if nCell not in localAssignment and value in self.csp.domain[nCell]:
                         self.csp.domain[nCell].remove(value)
                         self.csp.restore[var].append( (nCell, value) )
+
+                #self.runAC3(self.csp, var)
                 
-                #self.runAC3(self.csp)
                 #Do inference i.e. forward checking or ac-3 here
                 result = self.backtrackSearch(localAssignment)
                 if result is not None:
                     return result
                 self.steps += 1
+
                 self.csp.unassign(var, localAssignment)
                 
         return None
@@ -187,8 +189,8 @@ class Sudoku(object):
     ##For now, return domain list of a variable
     #Return value which gives least count of conflicts btw cells
     def orderDomainValues(self, var):
-        return sorted(self.csp.domain[var], key=lambda val: self.getConflictingCount(var, val))
-        #return self.csp.domain[var]
+        #return sorted(self.csp.domain[var], key=lambda val: self.getConflictingCount(var, val))
+        return self.csp.domain[var]
 
     def getConflictingCount(self, var, val):
         count = 0
