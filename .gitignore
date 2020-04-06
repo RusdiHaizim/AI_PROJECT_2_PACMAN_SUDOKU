@@ -1,4 +1,6 @@
-sudoku/
+sudoku/*
+!sudoku/convertinput.py
+!sudoku/top2365.txt
 out.txt
 
 #pyc files and output files
