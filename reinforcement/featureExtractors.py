@@ -155,7 +155,7 @@ class NewExtractor(FeatureExtractor):
           # make the distance a number less than one otherwise the update
           # will diverge wildly
           features["closest-food"] = float(dist) / (walls.width * walls.height)
-
+        """
         # Pursue ghosts in self-defence (omnivore pacman, vegans pls don't flame pl0x)
         if scaredGhost:
             distanceToClosestScaredGhost = min(getManhattanDistances(scaredGhost))
@@ -169,7 +169,7 @@ class NewExtractor(FeatureExtractor):
                 #print distanceToClosestScaredGhost, distanceToClosestActiveGhost, minMovesGhost
                 features["#-of-ghosts-1-step-away"] = 0.0
                 features["eats-food"] = 0.0
-        
+        """
         features.divideAll(10.0)
         return features
 
