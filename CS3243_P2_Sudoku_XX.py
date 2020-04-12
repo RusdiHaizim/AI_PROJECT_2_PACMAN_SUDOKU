@@ -248,7 +248,7 @@ class Sudoku(object):
 
     def checkResult(self):
         try:
-            f = open('sudoku/output1.txt', 'r')
+            f = open('sudoku/hard5OUT.txt', 'r')
         except IOError:
             print ("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
             raise IOError("Result file not found!")
