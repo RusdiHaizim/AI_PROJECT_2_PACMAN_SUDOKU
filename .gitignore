@@ -1,4 +1,4 @@
-sudoku/*
+sudoku/batchtest
 !sudoku/convertinput.py
 !sudoku/top2365.txt
 out.txt
