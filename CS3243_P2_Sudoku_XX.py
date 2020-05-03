@@ -2,10 +2,13 @@ import sys
 import copy
 from Queue import Queue
 from time import time
+from copy import deepcopy
 
 # Running script: given code can be run with the command:
 # python file.py, ./path/to/init_state.txt ./output/output.txt
 
+FAILURE = -1
+knownValues = {}
 ### Class containing csp model i.e. variables, domains, edges btw variables, backupForReassignment
 class Csp(object):
     def __init__(self, puzzle):
@@ -31,6 +34,12 @@ class Csp(object):
         #Init domains for each var, var:list()
         self.domain = {v: list(range(1,10)) if puzzle1[i] == 0 else [puzzle1[i]] for \
                        i, v in enumerate(self.varList)}
+
+        #KnownValues
+        for i in range(len(puzzle2)):
+            for j in range(len(puzzle2)):
+                if puzzle2[i][j] != 0:
+                    knownValues[(i, j)] = puzzle2[i][j]
         
         #form neighbour dict for each var
         for var in self.varList:
@@ -59,29 +68,6 @@ class Csp(object):
             if len(self.domain[var]) > 1:
                 return False
         return True
-
-    def isConsistent(self, assignment, var, value):
-        for xI, x in assignment.iteritems():
-            if x == value and xI in self.neighbours[var]:
-                return False
-        return True
-
-    def assign(self, var, value, assignment):
-        assignment[var] = value
-
-        #do forward checking
-        for nCell in self.neighbours[var]:
-            if nCell not in assignment and value in self.domain[nCell]:
-                self.domain[nCell].remove(value)
-                self.restore[var].append( (nCell, value) )
-                
-        
-    def unassign(self, var, assignment):
-        if var in assignment:
-            for (cell, value) in self.restore[var]:
-                self.domain[cell].append(value)
-            self.restore[var] = []
-            del assignment[var]
 
 ### Class containing Sudoku solving methods: AC3 and Backtrack
 class Sudoku(object):
@@ -146,6 +132,66 @@ class Sudoku(object):
                 #print cell, nCell
         return qu
 
+    def isConsistent(self, var, value):
+        for nCell in self.csp.neighbours[var]:
+            if value in self.csp.domain[nCell] and len(self.csp.domain[nCell]) == 1:
+                return False
+        return True
+
+    def assign(self, assignment, var, value):
+        assignment[var] = value
+        for val in self.csp.domain[var]:
+            if val != value:
+                self.csp.domain[var].remove(val)
+                self.csp.restore[var].append( (var, val) )
+
+    def unassign(self, var, assignment):
+        if var in assignment:
+            #print var
+            #print self.csp.domain[var]
+            #print self.csp.restore[var]
+            for (cell, value) in self.csp.restore[var]:
+                self.csp.domain[cell].append(value)
+            self.csp.restore[var] = []
+            del assignment[var]
+
+    def runInference(self, assignment, var, value):
+        for nCell in self.csp.neighbours[var]:
+            if value in self.csp.domain[nCell]:
+                self.csp.domain[nCell].remove(value)
+                self.csp.restore[var].append( (nCell, value) )
+                
+##        def revise(Xi, Xj, v):
+##            revised = False
+##            for dI in self.csp.domain[Xi]:
+##                removeFlag = True
+##                for dJ in self.csp.domain[Xj]:
+##                    if dJ != dI:
+##                        removeFlag = False
+##                if removeFlag:
+##                    self.csp.domain[Xi].remove(dI)
+##                    self.csp.restore[v].append( (Xi, dI) )
+##                    revised = True
+##            return revised
+##        
+##        qu = Queue()
+##        for nCell in self.csp.neighbours[var]:
+##            if nCell not in assignment:
+##                qu.put((nCell, var))
+##        while True:
+##            if qu.empty():
+##                break
+##            xI, xJ = qu.get()
+##
+##            #print (xI, xJ)
+##            if revise(xI, xJ, var):
+##                if len(self.csp.domain[xI]) == 0:
+##                    return FAILURE
+##                for xK in self.csp.neighbours[xI]:
+##                    if xK != xJ and xK not in assignment:
+##                        qu.put((xK, xI))
+               
+        return True
     #Bulk of solve is here
     def backtrackSearch(self, assignment):
         
@@ -158,27 +204,22 @@ class Sudoku(object):
         var = self.selectUnassignedVariable(assignment)
         #Least Constraining Value heuristic
         for value in self.orderDomainValues(var):
-            if self.csp.isConsistent(assignment, var, value):
+            if self.isConsistent(var, value):
                 #self.csp.assign(var, value, assignment)
-                localAssignment = assignment.copy()
-                localAssignment[var] = value
+                self.assign(assignment, var, value)
 
-                #do forward checking
-                for nCell in self.csp.neighbours[var]:
-                    if nCell not in localAssignment and value in self.csp.domain[nCell]:
-                        self.csp.domain[nCell].remove(value)
-                        self.csp.restore[var].append( (nCell, value) )
-
-                #self.runAC3(self.csp, var)
-                
                 #Do inference i.e. forward checking or ac-3 here
-                result = self.backtrackSearch(localAssignment)
-                if result is not None:
-                    return result
-                self.steps += 1
-
-                self.csp.unassign(var, localAssignment)
+                if self.runInference(assignment, var, value) != FAILURE:
+                    result = self.backtrackSearch(assignment)
+                    if result is not None:
+                        return result
+                    self.steps += 1
+##                for nCell in self.csp.neighbours[var]:
+##                    if value in self.csp.domain[nCell]:
+##                        self.csp.domain[nCell].remove(value)
+##                        self.csp.restore[var].append( (nCell, value) )
                 
+                self.unassign(var, assignment)
         return None
 
     #Function to return var with min number of domain values
@@ -222,6 +263,7 @@ class Sudoku(object):
                 
                 #RUN BACKTRACKING
                 assignment = {}
+                assignment.update(knownValues)
                 assignment = self.backtrackSearch(assignment)
                 if assignment is not None:
                     print 'STEPS:', self.steps
@@ -229,8 +271,7 @@ class Sudoku(object):
                         newPuzzle.domain[var] = [assignment[var]] if len(var) > 1 else newPuzzle.domain[var]
                     for k in newPuzzle.domain:
                         pass
-                    #print k, newPuzzle.domain[k]
-                if assignment is not None:
+                        #print k, newPuzzle.domain[k]
                     #TODO ASSIGN
                     timeTaken = time() - startTime
                     self.getOutput(newPuzzle)
@@ -248,7 +289,7 @@ class Sudoku(object):
 
     def checkResult(self):
         try:
-            f = open('sudoku/hard5OUT.txt', 'r')
+            f = open('sudoku/output1.txt', 'r')
         except IOError:
             print ("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
             raise IOError("Result file not found!")
