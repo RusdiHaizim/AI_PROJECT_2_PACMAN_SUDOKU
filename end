@@ -1,0 +1,186 @@
+[1mdiff --git a/reinforcement/featureExtractors.py b/reinforcement/featureExtractors.py[m
+[1mindex 2ce79b7..ac02f0e 100644[m
+[1m--- a/reinforcement/featureExtractors.py[m
+[1m+++ b/reinforcement/featureExtractors.py[m
+[36m@@ -4,7 +4,7 @@[m
+ # educational purposes provided that (1) you do not distribute or publish[m
+ # solutions, (2) you retain this notice, and (3) you provide clear[m
+ # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.[m
+[31m-# [m
+[32m+[m[32m#[m
+ # Attribution Information: The Pacman AI projects were developed at UC Berkeley.[m
+ # The core projects and autograders were primarily created by John DeNero[m
+ # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).[m
+[36m@@ -63,11 +63,7 @@[m [mdef closestFood(pos, food, walls):[m
+     # no food found[m
+     return None[m
+ [m
+[31m-def closestCap(pos, cap, walls):[m
+[31m-    """[m
+[31m-    closestFood -- this is similar to the function that we have[m
+[31m-    worked on in the search project; here its all in one place[m
+[31m-    """[m
+[32m+[m[32mdef closestCapsule(pos, cap, walls):[m
+     fringe = [(pos[0], pos[1], 0)][m
+     expanded = set()[m
+     while fringe:[m
+[36m@@ -75,14 +71,33 @@[m [mdef closestCap(pos, cap, walls):[m
+         if (pos_x, pos_y) in expanded:[m
+             continue[m
+         expanded.add((pos_x, pos_y))[m
+[31m-        # if we find a food at this location then exit[m
+[32m+[m[32m        # if we find a cap at this location then exit[m
+         if (pos_x, pos_y) in cap:[m
+             return dist[m
+         # otherwise spread out from the location to its neighbours[m
+         nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)[m
+         for nbr_x, nbr_y in nbrs:[m
+             fringe.append((nbr_x, nbr_y, dist+1))[m
+[31m-    # no food found[m
+[32m+[m[32m    # no cap found[m
+[32m+[m[32m    return None[m
+[32m+[m
+[32m+[m[32mdef closestGhost(pos, ghosts, walls):[m
+[32m+[m[32m    fringe = [(pos[0], pos[1], 0)][m
+[32m+[m[32m    expanded = set()[m
+[32m+[m[32m    while fringe:[m
+[32m+[m[32m        pos_x, pos_y, dist = fringe.pop(0)[m
+[32m+[m[32m        if (pos_x, pos_y) in expanded:[m
+[32m+[m[32m            continue[m
+[32m+[m[32m        expanded.add((pos_x, pos_y))[m
+[32m+[m[32m        # if we find a cap at this location then exit[m
+[32m+[m[32m        for g in ghosts:[m
+[32m+[m[32m            if (pos_x, pos_y) == g.getPosition():[m
+[32m+[m[32m                return dist[m
+[32m+[m[32m        # otherwise spread out from the location to its neighbours[m
+[32m+[m[32m        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)[m
+[32m+[m[32m        for nbr_x, nbr_y in nbrs:[m
+[32m+[m[32m            fringe.append((nbr_x, nbr_y, dist+1))[m
+[32m+[m[32m    # no cap found[m
+     return None[m
+ [m
+ class SimpleExtractor(FeatureExtractor):[m
+[36m@@ -124,8 +139,8 @@[m [mclass SimpleExtractor(FeatureExtractor):[m
+         features.divideAll(10.0)[m
+         return features[m
+ [m
+[31m-        [m
+[31m-        [m
+[32m+[m
+[32m+[m
+ [m
+ class NewExtractor(FeatureExtractor):[m
+     """[m
+[36m@@ -141,9 +156,9 @@[m [mclass NewExtractor(FeatureExtractor):[m
+         activeGhost = [][m
+         features = util.Counter()[m
+         caps = state.getCapsules()[m
+[31m-        #features["capsules"] = len(state.getCapsules())[m
+[31m-        minMovesGhost = 40 # This is the SCARED_TIMER of ghosts (40 moves before runs out)[m
+[31m-        [m
+[32m+[m[32m        # features["capsules"] = len(state.getCapsules())[m
+[32m+[m[32m        minMovesGhost = 40  # This is the SCARED_TIMER of ghosts (40 moves before runs out)[m
+[32m+[m
+         for ghost in state.getGhostStates():[m
+             if not ghost.scaredTimer:[m
+                 activeGhost.append(ghost)[m
+[36m@@ -154,13 +169,14 @@[m [mclass NewExtractor(FeatureExtractor):[m
+ [m
+         # Return remapped list containing manhattan distances btw ghost and pacman[m
+         pos = state.getPacmanPosition()[m
+[31m-        def getManhattanDistances(ghosts): [m
+[31m-            return map(lambda g: util.manhattanDistance(pos, g.getPosition()), ghosts) [m
+[31m-                    [m
+[32m+[m
+[32m+[m[32m        def getManhattanDistances(ghosts):[m
+[32m+[m[32m            return map(lambda g: util.manhattanDistance(pos, g.getPosition()), ghosts)[m
+[32m+[m
+         distanceToClosestActiveGhost = distanceToClosestScaredGhost = 0[m
+[31m-        [m
+[32m+[m
+         features["bias"] = 1.0[m
+[31m-        [m
+[32m+[m
+         # compute the location of pacman after he takes the action[m
+         x, y = state.getPacmanPosition()[m
+         dx, dy = Actions.directionToVector(action)[m
+[36m@@ -169,9 +185,10 @@[m [mclass NewExtractor(FeatureExtractor):[m
+         d_x, d_y = next_x, next_y - 1[m
+         l_x, l_y = next_x - 1, next_y[m
+         r_x, r_y = next_x + 1, next_y[m
+[31m-        [m
+[32m+[m
+         # count the number of ghosts 1-step away[m
+[31m-        features["#-of-ghosts-1-step-away"] = sum((next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)[m
+[32m+[m[32m        features["#-of-ghosts-1-step-away"] = sum([m
+[32m+[m[32m            (next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)[m
+ [m
+         # features["#-of-ghosts-2-step-away"] += sum((u_x, u_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)[m
+         # features["#-of-ghosts-2-step-away"] += sum((d_x, d_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)[m
+[36m@@ -183,44 +200,43 @@[m [mclass NewExtractor(FeatureExtractor):[m
+             features["eats-food"] = 1.0[m
+ [m
+         dist = closestFood((next_x, next_y), food, walls)[m
+[31m-        distC = closestCap((next_x, next_y), caps, walls)[m
+[31m-        distG = closestCap((next_x, next_y), ghosts, walls)[m
+[32m+[m[32m        distC = closestCapsule((next_x, next_y), caps, walls)[m
+[32m+[m[32m        distG = closestGhost((next_x, next_y), scaredGhost, walls)[m
+         if dist is not None:[m
+[31m-          # make the distance a number less than one otherwise the update[m
+[31m-          # will diverge wildly[m
+[32m+[m[32m            # make the distance a number less than one otherwise the update[m
+[32m+[m[32m            # will diverge wildly[m
+             features["closest-food"] = float(dist) / (walls.width * walls.height)[m
+[31m-            if distC is not None and activeGhost:[m
+[31m-                cc = float(distC) / (walls.width * walls.height)[m
+[31m-                if cc < features["closest-food"]:[m
+[31m-                    features["closest-cap"] = float(distC) / (walls.width * walls.height)[m
+[31m-                    features["closest-food"] = 0.0[m
+[31m-            if distG is not None and scaredGhost:[m
+[31m-                cg = float(distG) / (walls.width * walls.height)[m
+[31m-                if cg < features["closest-food"]:[m
+[31m-                    features["closest-ghost"] = float(distG) / (walls.width * walls.height)[m
+[31m-[m
+[32m+[m[32m        if distC is not None and activeGhost:[m
+[32m+[m[32m            cc = float(distC) / (walls.width * walls.height)[m
+[32m+[m[32m            #if cc < features["closest-food"]:[m
+[32m+[m[32m            features["closest-cap"] = float(distC) / (walls.width * walls.height)[m
+[32m+[m[32m                #features["closest-food"] = 0.0[m
+[32m+[m[32m        if distG is not None:[m
+[32m+[m[32m            cg = float(distG) / (walls.width * walls.height)[m
+[32m+[m[32m            if cg < features["closest-food"]:[m
+[32m+[m[32m                features["closest-ghost"] = float(distG) / (walls.width * walls.height)[m
+ [m
+         # Pursue ghosts in self-defence (omnivore pacman, vegans pls don't flame pl0x)[m
+         if scaredGhost:[m
+[31m-            distanceToClosestScaredGhost = min(getManhattanDistances(scaredGhost))[m
+[32m+[m[32m            distanceToClosestScaredGhost = distG #min(getManhattanDistances(scaredGhost))[m
+             if activeGhost:[m
+[31m-                distanceToClosestActiveGhost = min(getManhattanDistances(activeGhost))[m
+[32m+[m[32m                distanceToClosestActiveGhost = closestGhost((next_x, next_y), activeGhost, walls) #min(getManhattanDistances(activeGhost))[m
+             else:[m
+                 distanceToClosestActiveGhost = 10[m
+ [m
+             # Only eat ghost if pacman can catch up toe scaredGhost in time, and there's[m
+             # no incoming activeGhosts[m
+[31m-            #if distanceToClosestScaredGhost < minMovesGhost and distanceToClosestActiveGhost > 2:[m
+[32m+[m[32m            # if distanceToClosestScaredGhost < minMovesGhost and distanceToClosestActiveGhost > 2:[m
+             if distanceToClosestScaredGhost < minMovesGhost and distanceToClosestActiveGhost > 2:[m
+[31m-                #print distanceToClosestScaredGhost, distanceToClosestActiveGhost, minMovesGhost[m
+[32m+[m[32m                # print distanceToClosestScaredGhost, distanceToClosestActiveGhost, minMovesGhost[m
+                 features["#-of-ghosts-1-step-away"] = 0.0[m
+                 # features["#-of-ghosts-2-step-away"] = 0.0[m
+                 features["eats-food"] = 0.0[m
+                 if distG is not None:[m
+                     features["eats-ghost"] = 1.0[m
+[31m-                [m
+[32m+[m
+         features.divideAll(10.0)[m
+         return features[m
+ [m
+ [m
+[31m-        [m
+[32m+[m
+[1mdiff --git a/reinforcement/featureExtractors.pyc b/reinforcement/featureExtractors.pyc[m
+[1mindex 35cb54b..7618ac1 100644[m
+Binary files a/reinforcement/featureExtractors.pyc and b/reinforcement/featureExtractors.pyc differ

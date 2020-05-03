@@ -156,44 +156,40 @@ class Sudoku(object):
             del assignment[var]
 
     def runInference(self, assignment, var, value):
-##        for nCell in self.csp.neighbours[var]:
-##            if value in self.csp.domain[nCell]:
-##                self.csp.domain[nCell].remove(value)
-##                self.csp.restore[var].append( (nCell, value) )
-                
-        def revise(Xi, Xj, v):
-            revised = False
-            for dI in self.csp.domain[Xi]:
-                removeFlag = True
-                for dJ in self.csp.domain[Xj]:
-                    if dJ != dI:
-                        removeFlag = False
-                if removeFlag:
-                    self.csp.domain[Xi].remove(dI)
-                    self.csp.restore[v].append( (Xi, dI) )
-                    revised = True
-            return revised
-        
-        qu = Queue()
         for nCell in self.csp.neighbours[var]:
-            if nCell not in assignment:
-                qu.put((nCell, var))
-        while True:
-            if qu.empty():
-                break
-            xI, xJ = qu.get()
-
-            #print (xI, xJ)
-            if revise(xI, xJ, var):
-                if len(self.csp.domain[xI]) == 0:
-                    return FAILURE
-                if len(self.csp.domain[xI]) != 1:
-                    continue
-                for xK in self.csp.neighbours[xI]:
-                    if xK != xJ and xK not in assignment:
-                        qu.put((xK, xI))
-               
+            if value in self.csp.domain[nCell]:
+                self.csp.domain[nCell].remove(value)
+                self.csp.restore[var].append( (nCell, value) )
+                
+        # def revise(Xi, Xj, v):
+        #     revised = False
+        #     for dI in self.csp.domain[Xi]:
+        #         if dI in self.csp.domain[Xj] and len(self.csp.domain[Xj]) == 1:
+        #             self.csp.domain[Xi].remove(dI)
+        #             self.csp.restore[v].append( (Xi, dI) )
+        #             revised = True
+        #     return revised
+        #
+        # qu = Queue()
+        # for nCell in self.csp.neighbours[var]:
+        #     if nCell not in assignment:
+        #         qu.put((nCell, var))
+        # while True:
+        #     if qu.empty():
+        #         break
+        #     xI, xJ = qu.get()
+        #
+        #     #print (xI, xJ)
+        #     if revise(xI, xJ, var):
+        #         if len(self.csp.domain[xI]) == 0:
+        #             return FAILURE
+        #         if len(self.csp.domain[xI]) != 1:
+        #             continue
+        #         for xK in self.csp.neighbours[xI]:
+        #             if xK != xJ and xK not in assignment:
+        #                 qu.put((xK, xI))
         return True
+
     #Bulk of solve is here
     def backtrackSearch(self, assignment):
         
@@ -291,7 +287,7 @@ class Sudoku(object):
 
     def checkResult(self):
         try:
-            f = open('sudoku/output1.txt', 'r')
+            f = open('sudoku/hard5OUT.txt', 'r')
         except IOError:
             print ("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
             raise IOError("Result file not found!")
