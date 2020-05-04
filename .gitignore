@@ -1,5 +1,6 @@
 sudoku/batchtest
 .idea
+venv/
 !sudoku/convertinput.py
 !sudoku/top2365.txt
 out.txt

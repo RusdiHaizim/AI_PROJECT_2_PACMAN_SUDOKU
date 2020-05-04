@@ -32,8 +32,17 @@ class Csp(object):
             for j in range(9):
                 self.varList.append((i, j))
         # Init domains for each var, var:list()
-        self.domain = {v: list(range(1, 10)) if puzzle1[i] == 0 else [puzzle1[i]] for \
-                       i, v in enumerate(self.varList)}
+        idx = 0
+        for v in self.varList:
+            self.domain[v] = set()
+            if puzzle1[idx] == 0:
+                for j in range(1,10):
+                    self.domain[v].add(j)
+            else:
+                self.domain[v].add(puzzle1[idx])
+            idx += 1
+        # self.domain = {v: set([range(1, 10)]) if puzzle1[i] == 0 else set([puzzle1[i]]) for \
+        #                i, v in enumerate(self.varList)}
 
         # KnownValues
         for i in range(len(puzzle2)):
@@ -43,21 +52,21 @@ class Csp(object):
 
         # form neighbour dict for each var
         for var in self.varList:
-            self.neighbours[var] = list()
+            self.neighbours[var] = set()
             for i in range(len(puzzle2)):
                 # Check same row
                 if (var[0], i) != var:
-                    self.neighbours[var].append((var[0], i))
+                    self.neighbours[var].add((var[0], i))
                 # Check same col
                 if (i, var[1]) != var:
-                    self.neighbours[var].append((i, var[1]))
+                    self.neighbours[var].add((i, var[1]))
             # Check same box
             boxRow = (var[0] // 3) * 3
             boxCol = (var[1] // 3) * 3
             for i in range(boxRow, boxRow + 3):
                 for j in range(boxCol, boxCol + 3):
                     if (i, j) != var and (i, j) not in self.neighbours[var]:
-                        self.neighbours[var].append((i, j))
+                        self.neighbours[var].add((i, j))
 
         # Init restore for each var, var:list()
         self.restore = {v: list() for v in self.varList}
@@ -109,11 +118,11 @@ class Sudoku(object):
         return new_puzzle
 
     def runAC3(self, csp, var=None, assignment=None):
-        qu = Queue()
-        for nCell in self.csp.neighbours[var]:
-            if nCell not in assignment:
-                    qu.put((nCell, var))
-        # qu = self.getConstraints(csp)
+        # qu = Queue()
+        # for nCell in self.csp.neighbours[var]:
+        #     if nCell not in assignment:
+        #             qu.put((nCell, var))
+        qu = self.getConstraints(csp)
         while True:
             if qu.empty():
                 break
@@ -134,12 +143,14 @@ class Sudoku(object):
 
     def revise(self, csp, xI, xJ, var=None):
         revised = False
+        cop = csp.domain[xI].copy()
         for dI in csp.domain[xI]:
             if dI in csp.domain[xJ] and len(csp.domain[xJ]) == 1:
-                csp.domain[xI].remove(dI)
+                cop.remove(dI)
                 if var is not None:
-                    csp.restore[var].append( (xI, dI) )
+                    csp.restore[var].append((xI, dI))
                 revised = True
+        csp.domain[xI] = cop
         return revised
 
     def getConstraints(self, csp):
@@ -157,15 +168,17 @@ class Sudoku(object):
 
     def assign(self, assignment, var, value):
         assignment[var] = value
+        cop = self.csp.domain[var].copy()
         for val in self.csp.domain[var]:
             if val != value:
-                self.csp.domain[var].remove(val)
+                cop.remove(val)
                 self.csp.restore[var].append((var, val))
+        self.csp.domain[var] = cop
 
     def unassign(self, var, assignment):
         if var in assignment:
             for (cell, value) in self.csp.restore[var]:
-                self.csp.domain[cell].append(value)
+                self.csp.domain[cell].add(value)
             self.csp.restore[var] = []
             del assignment[var]
 
