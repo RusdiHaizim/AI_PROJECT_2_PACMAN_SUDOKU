@@ -9,7 +9,7 @@ fileTypeSuffix = '.txt'
 maxCol = 9
 
 startConvertingFromRow = 1
-NumberToConvert = 2
+NumberToConvert = 2365
 
 # SCRIPT STARTS
 
@@ -38,4 +38,4 @@ with open(sourceFile, 'r') as file:
             
             convertedFile.write(output[:len(output) - 3])
 
-print('CONVERSION COMPLETE')
+print 'CONVERSION COMPLETE'

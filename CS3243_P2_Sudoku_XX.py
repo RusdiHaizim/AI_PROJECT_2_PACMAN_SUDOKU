@@ -112,6 +112,7 @@ class Sudoku(object):
         self.csp = Csp(puzzle)
         self.constraints = self.getConstraints(self.csp)
         self.steps = 0
+        self.timeTaken = 0
 
     def copy(self, puzzle):
         new_puzzle = [[x for x in row] for row in puzzle]
@@ -240,8 +241,8 @@ class Sudoku(object):
         newPuzzle = self.csp
         pP(self.puzzle)
         startTime = time()
-        timeTaken = 0
-        print 'Starting backtrack'
+        # timeTaken = 0
+        # print 'Starting backtrack'
 
         # RUN BACKTRACKING
         assignment = {}
@@ -256,17 +257,17 @@ class Sudoku(object):
             # print k, newPuzzle.domain[k]
         if assignment is not None:
             # TODO ASSIGN
-            timeTaken = time() - startTime
+            self.timeTaken = time() - startTime
             self.getOutput(newPuzzle)
             print 'Backtrack SUCCESS'
             pP(self.ans)
+            print 'Time:', self.timeTaken
             self.checkResult()
 
         else:
             # NO solution, returning original sudoku
             print 'Backtrack FAILED'
 
-        print 'Time:', timeTaken
         # self.ans is a list of lists
         return self.ans
 
@@ -274,7 +275,7 @@ class Sudoku(object):
         try:
             fileOut = fileIn
             if fileIn is not None:
-                if 'input' in fileIn:
+                if 'input' in fileIn and 'new' not in fileIn:
                     fileOut = fileOut.replace('input', 'output')
                 else:
                     fileOut = fileOut.replace('.txt', 'OUT.txt')
@@ -307,6 +308,53 @@ def pP(puzzle):
         for j in range(len(puzzle)):
             print puzzle[i][j],
         print ""
+
+def returnPuzzle(f):
+    lines = f.readlines()
+    puzzle = [[0 for i in range(9)] for j in range(9)]
+    i, j = 0, 0
+    for line in lines:
+        for number in line:
+            if '0' <= number <= '9':
+                puzzle[i][j] = int(number)
+                j += 1
+                if j == 9:
+                    i += 1
+                    j = 0
+    return puzzle
+
+def startTest(numRange):
+    numRange = numRange.split(',')
+    assert len(numRange) == 2
+    fileStart = 'sudoku/batchtest/new_input'
+
+    #Start the experiment to find top 5 hardest puzzles
+    hardest = []
+    for i in range(int(numRange[0]), int(numRange[1]) + 1):
+        try:
+            fileName = fileStart + str(i) + '.txt'
+            f = open(fileName, 'r')
+        except:
+            print 'Whoops'
+            raise 'Input File ' + fileName + 'not found!'
+        puz = returnPuzzle(f)
+        sud = Sudoku(puz)
+        sud.solve()
+        if sud.timeTaken > 3:
+            tup = (sud.timeTaken, puz, fileName.replace('sudoku/batchtest/', ''))
+            hardest.append(tup)
+
+    hardest.sort(reverse=True)
+    for i in range(len(hardest)):
+        print hardest[i][0], hardest[i][2]
+        pP(hardest[i][1])
+        print '@' * 15
+
+    # if len(sys.argv) == 2:
+    #     print 'COMMENCING TEST'
+    #     startTest(sys.argv[1])
+    #     print 'END TEST'
+    #     sys.exit(0)
 
     # you may add more classes/functions if you think is useful
     # However, ensure all the classes/functions are in this file ONLY

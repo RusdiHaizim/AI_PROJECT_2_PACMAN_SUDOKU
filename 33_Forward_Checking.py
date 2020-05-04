@@ -241,7 +241,7 @@ class Sudoku(object):
         pP(self.puzzle)
         startTime = time()
         timeTaken = 0
-        print 'Starting backtrack'
+        # print 'Starting backtrack'
 
         # RUN BACKTRACKING
         assignment = {}
@@ -260,13 +260,13 @@ class Sudoku(object):
             self.getOutput(newPuzzle)
             print 'Backtrack SUCCESS'
             pP(self.ans)
+            print 'Time:', timeTaken
             self.checkResult()
 
         else:
             # NO solution, returning original sudoku
             print 'Backtrack FAILED'
 
-        print 'Time:', timeTaken
         # self.ans is a list of lists
         return self.ans
 
