@@ -2,7 +2,11 @@
 Solving Sudoku and Pacman
 
 ## Sudoku
-Planned to run AC-3 algorithm to solve easier puzzles first. For harder puzzles, program uses backtracking with 2 heuristics, MRV (MOST CONSTRAINED VARIABLE) and LCV (LEAST CONSTRAINT VALUE).
+Realised that AC-3 algorithm takes too long to solve within backtracking.
+Also, if AC-3 manages to solve in pre-processing, backtracking can solve it faster using forward-checking.
+
+Main algorithm now uses backtracking with 1 heuristic only, MRV (Minimum remaining values in variable)
+LCV (Least constraining value) is scraped since it takes too long to process.
 
 ### Input Command to run Program (Uses Python 2)
 
@@ -12,6 +16,16 @@ E.g. `python CS3243_P2_Sudoku_XX.py sudoku/input1.txt out.txt`
 
 ## Pacman
 Using Pacman AI projects were developed at UC Berkeley, because our module coordinators couldn't afford to make their own Pacman code template.
+
+Currently implemented NewExtractor as part of features, that allows Pacman to not be an idiot and needing over 100 training runs to solve some mazes.
+
+Highlights of NewExtractor:
+. It can distinguish activeGhost from scaredGhost
+. It will try to find and eat capsules if activeGhost is present, conserve capsules otherwise
+. It will play safe by prioritising finishing the maze instead of actively seeking out scaredGhost (HIGHLY USEFUL for trickyClassic and capsuleClassic)
+. It's usually not retarded (stuttering up and down after eating capsules due to overdose)
+
+
 
 :warning: You must download an XServer for your WSL(Windows Subsystem for Linux) for it to run the GUI. :warning:
 
