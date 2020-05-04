@@ -19,11 +19,11 @@ Using Pacman AI projects were developed at UC Berkeley, because our module coord
 
 Currently implemented NewExtractor as part of features, that allows Pacman to not be an idiot and needing over 100 training runs to solve some mazes.
 
-Highlights of NewExtractor:
-. It can distinguish activeGhost from scaredGhost
-. It will try to find and eat capsules if activeGhost is present, conserve capsules otherwise
-. It will play safe by prioritising finishing the maze instead of actively seeking out scaredGhost (HIGHLY USEFUL for trickyClassic and capsuleClassic)
-. It's usually not retarded (stuttering up and down after eating capsules due to overdose)
+**Highlights of NewExtractor:**
+- It can distinguish activeGhost from scaredGhost
+- It will try to find and eat capsules if activeGhost is present, conserve capsules otherwise
+- It will play safe by prioritising finishing the maze instead of actively seeking out scaredGhost (HIGHLY USEFUL for trickyClassic and capsuleClassic)
+- It's usually not retarded (stuttering up and down after eating capsules due to overdose)
 
 
 
