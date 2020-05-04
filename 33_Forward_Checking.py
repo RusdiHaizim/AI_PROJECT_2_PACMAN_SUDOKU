@@ -118,11 +118,11 @@ class Sudoku(object):
         return new_puzzle
 
     def runAC3(self, csp, var=None, assignment=None):
-        qu = Queue()
-        for nCell in self.csp.neighbours[var]:
-            if nCell not in assignment:
-                    qu.put((nCell, var))
-        # qu = self.getConstraints(csp)
+        # qu = Queue()
+        # for nCell in self.csp.neighbours[var]:
+        #     if nCell not in assignment:
+        #             qu.put((nCell, var))
+        qu = self.getConstraints(csp)
         while True:
             if qu.empty():
                 break
@@ -183,11 +183,11 @@ class Sudoku(object):
             del assignment[var]
 
     def runInference(self, assignment, var, value):
-        return self.runAC3(self.csp, var, assignment)
-        # for nCell in self.csp.neighbours[var]:
-        #     if nCell not in assignment and value in self.csp.domain[nCell]:
-        #         self.csp.domain[nCell].remove(value)
-        #         self.csp.restore[var].append((nCell, value))
+        # return self.runAC3(self.csp, var, assignment)
+        for nCell in self.csp.neighbours[var]:
+            if nCell not in assignment and value in self.csp.domain[nCell]:
+                self.csp.domain[nCell].remove(value)
+                self.csp.restore[var].append((nCell, value))
         return True
 
     # Bulk of solve is here
