@@ -8,6 +8,7 @@ from time import time
 # python file.py, ./path/to/init_state.txt ./output/output.txt
 FAILURE = -1
 knownValues = {}
+fileIn = None
 ### Class containing csp model i.e. variables, domains, edges btw variables, backupForReassignment
 class Csp(object):
     def __init__(self, puzzle):
@@ -246,7 +247,7 @@ class Sudoku(object):
             self.getOutput(newPuzzle)
             print 'Backtrack SUCCESS'
             pP(self.ans)
-            print 'Result is', self.checkResult()
+            self.checkResult()
 
         else:
             # NO solution, returning original sudoku
@@ -258,7 +259,13 @@ class Sudoku(object):
 
     def checkResult(self):
         try:
-            f = open('sudoku/hard5OUT.txt', 'r')
+            fileOut = fileIn
+            if fileIn is not None:
+                if 'input' in fileIn:
+                    fileOut = fileOut.replace('input', 'output')
+                else:
+                    fileOut = fileOut.replace('.txt', 'OUT.txt')
+            f = open(fileOut, 'r')
         except IOError:
             print("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
             raise IOError("Result file not found!")
@@ -277,8 +284,9 @@ class Sudoku(object):
                         j = 0
 
         if puzzle == self.ans:
-            return 'PASS'
-        return 'FAIL'
+            print 'PASS'
+        else:
+            print 'FAIL'
 
 
 def pP(puzzle):
@@ -301,6 +309,7 @@ if __name__ == "__main__":
 
     try:
         f = open(sys.argv[1], 'r')
+        fileIn = str(sys.argv[1])
     except IOError:
         print("\nUsage: python CS3243_P2_Sudoku_XX.py input.txt output.txt\n")
         raise IOError("Input file not found!")
