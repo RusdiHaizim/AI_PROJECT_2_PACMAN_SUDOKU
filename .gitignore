@@ -4,6 +4,7 @@ venv/
 !sudoku/convertinput.py
 !sudoku/top2365.txt
 out.txt
+.vscode
 
 #pyc files and output files
 reinforcement/environment.pyc
