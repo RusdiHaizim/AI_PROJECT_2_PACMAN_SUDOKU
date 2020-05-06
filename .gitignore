@@ -3,7 +3,9 @@ sudoku/batchtest
 venv/
 !sudoku/convertinput.py
 !sudoku/top2365.txt
-out.txt
+*OUT.txt
+sudoku/output?.txt
+analysis.txt
 .vscode
 
 #pyc files and output files
