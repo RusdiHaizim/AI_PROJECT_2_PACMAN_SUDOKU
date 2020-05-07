@@ -1,5 +1,4 @@
 import sys
-from copy import deepcopy
 from Queue import Queue
 from time import time
 
@@ -8,7 +7,7 @@ from time import time
 FAILURE = -1
 knownValues = {}
 fileIn = None
-
+printFlag = False
 
 # Class containing csp model i.e. variables, domains, edges btw variables, backupForReassignment
 class Csp(object):
@@ -70,7 +69,10 @@ class Csp(object):
                         self.neighbours[var].add((i, j))
 
         # Init restore for each var, var:list()
-        self.restore = {v: set() for v in self.varList}
+        # self.restore = {v: set() for v in self.varList}
+        # fix for sunfire:
+        for v in self.varList:
+            self.restore[v] = set()
 
     def isSolved(self):
         for var in self.varList:
@@ -195,8 +197,8 @@ class Sudoku(object):
         return True
 
     def runInference(self, assignment, var, value):
-        # return self.runAC3(self.csp, var, assignment)
-        return self.forwardCheck(assignment, var, value)
+        return self.runAC3(self.csp, var, assignment)
+        # return self.forwardCheck(assignment, var, value)
 
     # Bulk of solve is here
     def backtrackSearch(self, assignment):
@@ -240,8 +242,16 @@ class Sudoku(object):
         # Only find HiddenSingles if MRV isn't implemented yet [Idk why but it only works this way]
         if self.hiddenSingleFlag:
             for i in range(0, 9):
-                rowList = {v: [] for v in range(1, 10)}  # Checks for HiddenSingles by row
-                colList = {v: [] for v in range(1, 10)}  # Checks for HiddenSingles by col
+                # rowList = {v: [] for v in range(1, 10)}  # Checks for HiddenSingles by row
+                # fix for sunfire:
+                rowList = {}
+                for v in range(1, 10):
+                    rowList[v] = []
+                # colList = {v: [] for v in range(1, 10)}  # Checks for HiddenSingles by col
+                # fix for sunfire
+                colList = {}
+                for v in range(1, 10):
+                    colList[v] = []
                 for j in range(0, 9):
                     for v in self.csp.domain[(i, j)]:
                         if len(self.csp.domain[(i, j)]) != 1:
@@ -259,7 +269,11 @@ class Sudoku(object):
             # Checks for HiddenSingles by box
             bxLs = [(0, 0), (0, 3), (0, 6), (3, 0), (3, 3), (3, 6), (6, 0), (6, 3), (6, 6)]
             for i in range(0, 9):
-                boxList = {v: [] for v in range(1, 10)}
+                # boxList = {v: [] for v in range(1, 10)}
+                # fix for sunfire:
+                boxList = {}
+                for v in range(1, 10):
+                    boxList[v] = []
                 rowCount = bxLs[i][0]
                 for y in range(rowCount, rowCount + 3):
                     colCount = bxLs[i][1]
@@ -313,7 +327,7 @@ class Sudoku(object):
         #     print key, newPuzzle.domain[key]
         assignment = self.backtrackSearch(assignment)
         if assignment is not None:
-            print 'STEPS:', self.steps
+            pr('STEPS:', self.steps)
             for var in newPuzzle.domain:
                 newPuzzle.domain[var] = [assignment[var]] if len(var) > 1 else newPuzzle.domain[var]
             for k in newPuzzle.domain:
@@ -323,13 +337,13 @@ class Sudoku(object):
             # TODO ASSIGN
             self.timeTaken = time() - startTime
             self.getOutput(newPuzzle)
-            print 'Backtrack SUCCESS'
+            pr('Backtrack SUCCESS')
             pP(self.ans)
-            print 'Time:', self.timeTaken
+            pr('Time:', self.timeTaken)
             self.checkResult()
         else:
             # NO solution, returning original sudoku
-            print 'Backtrack FAILED'
+            pr('Backtrack FAILED')
 
         # self.ans is a list of lists
         return self.ans
@@ -361,16 +375,22 @@ class Sudoku(object):
                         j = 0
 
         if puzzle == self.ans:
-            print 'PASS'
+            pr('PASS')
         else:
-            print 'FAIL'
+            pr('FAIL')
 
+def pr(*items):
+    if printFlag:
+        for item in items:
+            print item,
+        print ""
 
 def pP(puzzle):
-    for i in range(len(puzzle)):
-        for j in range(len(puzzle)):
-            print puzzle[i][j],
-        print ""
+    if printFlag:
+        for i in range(len(puzzle)):
+            for j in range(len(puzzle)):
+                print puzzle[i][j],
+            print ""
 
 
 def returnPuzzle(f):
