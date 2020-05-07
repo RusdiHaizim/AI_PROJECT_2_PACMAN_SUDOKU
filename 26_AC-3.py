@@ -7,7 +7,7 @@ from time import time
 FAILURE = -1
 knownValues = {}
 fileIn = None
-printFlag = False
+printFlag = True
 
 # Class containing csp model i.e. variables, domains, edges btw variables, backupForReassignment
 class Csp(object):
@@ -180,12 +180,17 @@ class Sudoku(object):
             if val != value:
                 cop.remove(val)
                 self.csp.restore[var].add((var, val))
+        for nCell in self.csp.neighbours[var]:
+            self.csp.neighbours[nCell].remove(var)
+
         self.csp.domain[var] = cop
 
     def unassign(self, var, assignment):
         if var in assignment:
             for (cell, value) in self.csp.restore[var]:
                 self.csp.domain[cell].add(value)
+            for nCell in self.csp.neighbours[var]:
+                self.csp.neighbours[nCell].add(var)
             self.csp.restore[var] = set()
             del assignment[var]
 
@@ -208,8 +213,8 @@ class Sudoku(object):
         # Select from 3 criteria (SEE function for more info)
         var = self.selectUnassignedVariable(assignment)
         # Stop finding HiddenSingles if first occurrence of MRV has started
-        if not isinstance(var, list) and not len(self.csp.domain[var]) == 1 and self.hiddenSingleFlag:
-            self.hiddenSingleFlag = False
+        # if not isinstance(var, list) and not len(self.csp.domain[var]) == 1 and self.hiddenSingleFlag:
+        #     self.hiddenSingleFlag = False
 
         # Gives preference of value for HiddenSingle if found
         prefVal = None
@@ -238,6 +243,22 @@ class Sudoku(object):
         # Return early if minV is confirmed to have only 1 value
         if len(self.csp.domain[minV]) == 1:
             return minV
+
+        chosenCell = minV
+        minDomain = float('inf')
+        maxDegree = -1
+        for cell in self.csp.varList:
+            if cell not in assignment:
+                currDomainSize = len(self.csp.domain[cell])
+                if currDomainSize < minDomain:
+                    minDomain = currDomainSize
+                    chosenCell = cell
+                elif currDomainSize == minDomain:
+                    currDegree = len(self.csp.neighbours[cell])
+                    if currDegree > maxDegree:
+                        maxDegree = currDegree
+                        chosenCell = cell
+
 
         # Only find HiddenSingles if MRV isn't implemented yet [Idk why but it only works this way]
         if self.hiddenSingleFlag:
@@ -286,8 +307,9 @@ class Sudoku(object):
                     if len(boxList[v]) == 1:
                         return [boxList[v][0], v]
 
+        self.hiddenSingleFlag = False
         # MRV implemented if cannot find HiddenSingles
-        return min(unassigned, key=lambda var: len(self.csp.domain[var]))
+        return chosenCell
 
     # Firstly, tries to return domain with preferential value for HiddenSingle at the front, if present
     # Else, return normal domain of var
