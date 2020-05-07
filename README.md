@@ -1,4 +1,4 @@
-# AI_PROJECT_2_GROUP_33
+# AI_PROJECT_2
 Solving Sudoku and Pacman
 
 ## Sudoku
