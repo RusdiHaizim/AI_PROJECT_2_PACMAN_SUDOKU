@@ -362,7 +362,7 @@ class Sudoku(object):
             pr('Backtrack SUCCESS')
             pP(self.ans)
             pr('Time:', self.timeTaken)
-            self.checkResult()
+            # self.checkResult()
         else:
             # NO solution, returning original sudoku
             pr('Backtrack FAILED')
