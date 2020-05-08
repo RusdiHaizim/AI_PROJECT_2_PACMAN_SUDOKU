@@ -1,5 +1,4 @@
 import sys
-from copy import deepcopy
 from Queue import Queue
 from time import time
 
@@ -8,7 +7,7 @@ from time import time
 FAILURE = -1
 knownValues = {}
 fileIn = None
-
+printFlag = True
 
 # Class containing csp model i.e. variables, domains, edges btw variables, backupForReassignment
 class Csp(object):
@@ -181,12 +180,17 @@ class Sudoku(object):
             if val != value:
                 cop.remove(val)
                 self.csp.restore[var].add((var, val))
+        for nCell in self.csp.neighbours[var]:
+            self.csp.neighbours[nCell].remove(var)
+
         self.csp.domain[var] = cop
 
     def unassign(self, var, assignment):
         if var in assignment:
             for (cell, value) in self.csp.restore[var]:
                 self.csp.domain[cell].add(value)
+            for nCell in self.csp.neighbours[var]:
+                self.csp.neighbours[nCell].add(var)
             self.csp.restore[var] = set()
             del assignment[var]
 
@@ -198,8 +202,8 @@ class Sudoku(object):
         return True
 
     def runInference(self, assignment, var, value):
-        return self.runAC3(self.csp, var, assignment)
-        # return self.forwardCheck(assignment, var, value)
+        # return self.runAC3(self.csp, var, assignment)
+        return self.forwardCheck(assignment, var, value)
 
     # Bulk of solve is here
     def backtrackSearch(self, assignment):
@@ -209,8 +213,8 @@ class Sudoku(object):
         # Select from 3 criteria (SEE function for more info)
         var = self.selectUnassignedVariable(assignment)
         # Stop finding HiddenSingles if first occurrence of MRV has started
-        if not isinstance(var, list) and not len(self.csp.domain[var]) == 1 and self.hiddenSingleFlag:
-            self.hiddenSingleFlag = False
+        # if not isinstance(var, list) and not len(self.csp.domain[var]) == 1 and self.hiddenSingleFlag:
+        #     self.hiddenSingleFlag = False
 
         # Gives preference of value for HiddenSingle if found
         prefVal = None
@@ -239,6 +243,22 @@ class Sudoku(object):
         # Return early if minV is confirmed to have only 1 value
         if len(self.csp.domain[minV]) == 1:
             return minV
+
+        chosenCell = minV
+        minDomain = float('inf')
+        maxDegree = -1
+        for cell in self.csp.varList:
+            if cell not in assignment:
+                currDomainSize = len(self.csp.domain[cell])
+                if currDomainSize < minDomain:
+                    minDomain = currDomainSize
+                    chosenCell = cell
+                elif currDomainSize == minDomain:
+                    currDegree = len(self.csp.neighbours[cell])
+                    if currDegree > maxDegree:
+                        maxDegree = currDegree
+                        chosenCell = cell
+
 
         # Only find HiddenSingles if MRV isn't implemented yet [Idk why but it only works this way]
         if self.hiddenSingleFlag:
@@ -287,8 +307,9 @@ class Sudoku(object):
                     if len(boxList[v]) == 1:
                         return [boxList[v][0], v]
 
+        self.hiddenSingleFlag = False
         # MRV implemented if cannot find HiddenSingles
-        return min(unassigned, key=lambda var: len(self.csp.domain[var]))
+        return chosenCell
 
     # Firstly, tries to return domain with preferential value for HiddenSingle at the front, if present
     # Else, return normal domain of var
@@ -328,7 +349,7 @@ class Sudoku(object):
         #     print key, newPuzzle.domain[key]
         assignment = self.backtrackSearch(assignment)
         if assignment is not None:
-            print 'STEPS:', self.steps
+            pr('STEPS:', self.steps)
             for var in newPuzzle.domain:
                 newPuzzle.domain[var] = [assignment[var]] if len(var) > 1 else newPuzzle.domain[var]
             for k in newPuzzle.domain:
@@ -338,13 +359,13 @@ class Sudoku(object):
             # TODO ASSIGN
             self.timeTaken = time() - startTime
             self.getOutput(newPuzzle)
-            print 'Backtrack SUCCESS'
+            pr('Backtrack SUCCESS')
             pP(self.ans)
-            print 'Time:', self.timeTaken
+            pr('Time:', self.timeTaken)
             self.checkResult()
         else:
             # NO solution, returning original sudoku
-            print 'Backtrack FAILED'
+            pr('Backtrack FAILED')
 
         # self.ans is a list of lists
         return self.ans
@@ -376,16 +397,22 @@ class Sudoku(object):
                         j = 0
 
         if puzzle == self.ans:
-            print 'PASS'
+            pr('PASS')
         else:
-            print 'FAIL'
+            pr('FAIL')
 
+def pr(*items):
+    if printFlag:
+        for item in items:
+            print item,
+        print ""
 
 def pP(puzzle):
-    for i in range(len(puzzle)):
-        for j in range(len(puzzle)):
-            print puzzle[i][j],
-        print ""
+    if printFlag:
+        for i in range(len(puzzle)):
+            for j in range(len(puzzle)):
+                print puzzle[i][j],
+            print ""
 
 
 def returnPuzzle(f):

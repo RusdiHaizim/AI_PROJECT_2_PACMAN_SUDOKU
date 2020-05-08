@@ -1,18 +1,20 @@
-# AI_PROJECT_2_GROUP_33
+# AI_PROJECT_2
 Solving Sudoku and Pacman
 
 ## Sudoku
-Realised that AC-3 algorithm takes too long to solve within backtracking.
-Also, if AC-3 manages to solve in pre-processing, backtracking can solve it faster using forward-checking.
+Utilises backtracking algorithm (DFS). Two different Inference Mechanisms were considered (Forward Checking and AC-3). Main file now uses Forward Checking due to better average timings (0.71s) compared to AC-3 (2.59s).
 
-Main algorithm now uses backtracking with 1 heuristic only, MRV (Minimum remaining values in variable)
+Choice of variable and values depend on 3 heuristics:
+- Minimum Remaining Values (Choosing cell with smallest domain)
+- Most Constraining Variable (Choose cell with highest degree with unassigned neighbours)
+- Hidden Single (Human-like technique to distinguish the hidden 'correct' value in a cell)
 LCV (Least constraining value) is scraped since it takes too long to process.
 
 ### Input Command to run Program (Uses Python 2)
 
 Format: `python $PROGRAM_NAME $INPUT_TEST_CASE $OUTPUT_FILE`
 
-E.g. `python CS3243_P2_Sudoku_XX.py sudoku/input1.txt out.txt`
+E.g. `python CS3243_P2_Sudoku_26.py sudoku/input1.txt out.txt`
 
 ## Pacman
 Using Pacman AI projects were developed at UC Berkeley, because our module coordinators couldn't afford to make their own Pacman code template.
